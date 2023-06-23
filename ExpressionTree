@@ -1,0 +1,469 @@
+# DO NOT modify this class
+class StackNode:
+    def __init__(self, value):
+        self.value = value  
+        self.next = None 
+    
+    def __str__(self):
+        return "StackNode({})".format(self.value) 
+
+    __repr__ = __str__
+                          
+
+
+# DO NOT modify this class
+class Stack:
+
+    def __init__(self):
+        self.top = None
+    
+    # DO NOT modify this method
+    def __str__(self):
+        temp=self.top
+        out=[]
+        while temp:
+            out.append(str(temp.value))
+            temp=temp.next
+        out=' <= '.join(out)
+        return ('Top: {}\nStack: {}'.format(self.top,out))
+
+    # DO NOT modify this method
+    __repr__=__str__
+
+    
+
+    def isEmpty(self):
+        ## YOUR CODE STARTS HERE
+        #pass
+        return self.top == None
+
+    
+    def __len__(self): 
+        cur = self.top
+        cnt = 0
+        while cur is not None:
+            cnt += 1
+            cur = cur.next
+        return cnt
+
+
+    def push(self,value):
+        node = StackNode(value)
+        if self.top is None:
+            self.top = node
+        else:
+            node.next = self.top
+            self.top = node
+            
+     
+    def pop(self):
+        if self.top is None:
+            return None
+        
+        node = self.top
+        val = self.top.value
+        self.top = self.top.next
+        node.next = None
+        return val
+        
+    def peek(self):
+        if self.top is None:
+            return None
+        else:
+            return self.top.value
+        
+
+
+
+
+# DO NOT modify this class
+class TreeNode:
+    def __init__(self, value):
+        self.value = value  
+        self.left = None
+        self.right = None
+    
+    def __str__(self):
+        return "<{}>".format(self.value) 
+
+    __repr__ = __str__
+                          
+
+
+
+class ExpressionTree:
+    
+    # DO NOT modify this member
+    _precedence = { '+':1, '-':1, '*':2, '/':2, '^':3 }
+    
+    # DO NOT modify this method
+    def __init__(self):
+        self.__expr = None
+        self.__etree = None
+
+        
+    # DO NOT modify this method
+    @property
+    def expr(self):
+        return self.__expr
+
+    
+    
+    # DO NOT modify this method
+    # - Assumption: new_expr is a well-formed infix expression
+    # - Your program will be tested only with valid infix expressions
+    @expr.setter
+    def expr(self, new_expr):
+        if isinstance(new_expr, str):
+            self.__expr = new_expr
+            self.__etree = self._buildExpressionTree()
+        else:
+            print('Error in @expr.setter: Invalid expression')
+            return None
+
+        
+
+    # DO NOT modify this method
+    def _isNumber(self, token):
+        try:
+            float(token)
+            return True
+        except:
+            return False
+
+
+        
+    
+
+    def _buildExpressionTree(self):
+        """
+        >>> x = ExpressionTree()
+        >>> x.expr = '2'; str(x)
+        ' -> 2.0'
+        >>> x.expr = '( 2.5 )'; str(x)
+        ' -> 2.5'
+        >>> x.expr = '( ( 2 ) )'; str(x)
+        ' -> 2.0'
+        >>> x.expr = '2 ^ 4'; str(x)
+        '     -> 4.0\\n -> ^\\n     -> 2.0'
+        >>> x.expr = '2 + 4 + 5'; str(x)
+        '     -> 5.0\\n -> +\\n         -> 4.0\\n     -> +\\n         -> 2.0'
+        >>> x.expr = '2 ^ 4 ^ 5'; str(x)
+        '         -> 5.0\\n     -> ^\\n         -> 4.0\\n -> ^\\n     -> 2.0'
+        >>> x.expr = '2.1 * 5 + 3 ^ 2 + 1 + 4.45'; str(x)
+        '     -> 4.45\\n -> +\\n         -> 1.0\\n     -> +\\n                 -> 2.0\\n             -> ^\\n                 -> 3.0\\n         -> +\\n                 -> 5.0\\n             -> *\\n                 -> 2.1'
+        >>> x.expr = '2 * ( ( 5 + -3 ) ^ 2 + ( 1 + 4 ) )'; str(x)
+        '             -> 4.0\\n         -> +\\n             -> 1.0\\n     -> +\\n             -> 2.0\\n         -> ^\\n                 -> -3.0\\n             -> +\\n                 -> 5.0\\n -> *\\n     -> 2.0'
+        >>> x.expr = '( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) )'; str(x)
+        '             -> 4.0\\n         -> +\\n             -> 1.0\\n     -> +\\n             -> 2.0\\n         -> ^\\n                 -> 3.0\\n             -> +\\n                 -> 5.0\\n -> *\\n     -> 2.0'
+        >>> x.expr = '( ( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) ) )'; str(x)
+        '             -> 4.0\\n         -> +\\n             -> 1.0\\n     -> +\\n             -> 2.0\\n         -> ^\\n                 -> 3.0\\n             -> +\\n                 -> 5.0\\n -> *\\n     -> 2.0'
+        """
+
+        ## You must use these two stacks
+        ## when implementing the algorithm given in the lecture
+        ratorStack = Stack()
+        randStack = Stack()
+
+
+        ## YOUR CODE STARTS HERE
+        # Have a list of tokens from infix expression
+        tokens = list(self.__expr.strip().split())
+        for token in tokens:
+            if self._isNumber(token): # if token is a number then then have a treenode and push it to randStack
+                randStack.push(TreeNode(str(float(token))))
+            elif token == '(': # if token is '(' then have a treenode and push it to ratorStack
+                ratorStack.push(TreeNode(token))
+            elif token == ')': #when token is equal to ')'
+                while not ratorStack.isEmpty() and ratorStack.peek().value != '(': # if the ratorstack is not empty and the peek value is not equal to ( the create the tree
+                    rator = ratorStack.pop()
+                    right = randStack.pop()
+                    left = randStack.pop()
+                    rator.left = left
+                    rator.right = right
+                    randStack.push(rator)
+                ratorStack.pop()  # remove the '(' by popping it from ratorstack
+            elif token in '*/+-': # if token is an operator
+                while not ratorStack.isEmpty(): # while ratorstack is not empty 
+                    if ratorStack.peek().value != '(' and self._precedence[
+                        token] <= self._precedence[ratorStack.peek().value]:
+                        rator = ratorStack.pop() # Here we create the tree
+                        right = randStack.pop()
+                        left = randStack.pop()
+                        rator.left = left
+                        rator.right = right
+                        randStack.push(rator) # push tree to randstack
+                    else:
+                        break
+                ratorStack.push(TreeNode(token)) # create new tree node and push it to ratorstack
+            elif token == '^': #when token is equal to '^'
+                while not ratorStack.isEmpty(): # while ratorstack is not empty 
+                    if ratorStack.peek().value != '(' and self._precedence[
+                        token] < self._precedence[ratorStack.peek().value]: # when top of rator stack is not equal to ( and the precedence is less then precedence of top of ratorstack then create a tree
+                        rator = ratorStack.pop()
+                        right = randStack.pop()
+                        left = randStack.pop()
+                        rator.left = left
+                        rator.right = right
+                        randStack.push(rator) # push the tree to randstack 
+                    else:
+                        break
+                ratorStack.push(TreeNode(token)) # create new tree node and push to ratorstack
+            else:
+                return None # else return none
+
+        while not ratorStack.isEmpty(): # while ratorstack is not empty we create a treeand push it to randstack
+            rator = ratorStack.pop()
+            right = randStack.pop()
+            left = randStack.pop()
+            rator.left = left
+            rator.right = right
+            randStack.push(rator)
+        if len(randStack) != 1: #if len(randstack) is not equal to then return None
+            return None
+        return randStack.pop() # pop randstack and return the item
+
+
+    
+
+
+    def inorder(self):
+        """
+        >>> x = ExpressionTree()
+        >>> x.expr = '2 ^ 4'; x.inorder()
+        '( 2.0 ^ 4.0 )'
+        >>> x.expr = '2 + 4 + 5'; x.inorder()
+        '( ( 2.0 + 4.0 ) + 5.0 )'
+        >>> x.expr = '2 ^ 4 ^ 5'; x.inorder()
+        '( 2.0 ^ ( 4.0 ^ 5.0 ) )'
+        >>> x.expr = '2'; x.inorder()
+        '2.0'
+        >>> x.expr = '2.1 * 5 + 3 ^ 2 + 1 + 4.45'; x.inorder()
+        '( ( ( ( 2.1 * 5.0 ) + ( 3.0 ^ 2.0 ) ) + 1.0 ) + 4.45 )'
+        >>> x.expr = '( 2.5 )'; x.inorder()
+        '2.5'
+        >>> x.expr = '( ( 2 ) )'; x.inorder()
+        '2.0'
+        >>> x.expr = '2 * ( ( 5 + -3 ) ^ 2 + ( 1 + 4 ) )'; x.inorder()
+        '( 2.0 * ( ( ( 5.0 + -3.0 ) ^ 2.0 ) + ( 1.0 + 4.0 ) ) )'
+        >>> x.expr = '( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) )'; x.inorder()
+        '( 2.0 * ( ( ( 5.0 + 3.0 ) ^ 2.0 ) + ( 1.0 + 4.0 ) ) )'
+        >>> x.expr = '( ( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) ) )'; x.inorder()
+        '( 2.0 * ( ( ( 5.0 + 3.0 ) ^ 2.0 ) + ( 1.0 + 4.0 ) ) )'
+        >>> x.expr = '2 * ( -5 + 3 ) ^ 2 + ( 1 + 4 )'; x.inorder()
+        '( ( 2.0 * ( ( -5.0 + 3.0 ) ^ 2.0 ) ) + ( 1.0 + 4.0 ) )'
+        """
+    
+        ## YOUR CODE STARTS HERE
+        # Here create a variable which calls the _inorderHelp method and traverses self.__etree
+        # then I return the answer variable and use the strip method to remove any unwanted space.
+        answer = self._inorderHelp(self.__etree)
+        return answer.strip()
+
+
+
+
+    def _inorderHelp(self, node): # Here I use a private method for inorder
+        if node is None: # If the node is none then return empty string
+            return ""
+
+        left = self._inorderHelp(node.left) # then use recursion for the left node and right node 
+        right = self._inorderHelp(node.right)
+
+        if left and right: # See if left and right have nonempty values
+            return "( " + left + " " + node.value + " " + right + " )" # Here return a string representation in LVR since this is inorder
+        else:
+            return node.value # Here just return node.value since if the left or right side is empty then it's a leaf node
+        
+        
+        
+
+
+
+    def preorder(self):
+        """
+        >>> x = ExpressionTree()
+        >>> x.expr = '2 ^ 4'; x.preorder()
+        '^ 2.0 4.0'
+        >>> x.expr = '2 + 4 + 5'; x.preorder()
+        '+ + 2.0 4.0 5.0'
+        >>> x.expr = '2 ^ 4 ^ 5'; x.preorder()
+        '^ 2.0 ^ 4.0 5.0'
+        >>> x.expr = '2'; x.preorder()
+        '2.0'
+        >>> x.expr = '2.1 * 5 + 3 ^ 2 + 1 + 4.45'; x.preorder()
+        '+ + + * 2.1 5.0 ^ 3.0 2.0 1.0 4.45'
+        >>> x.expr = '( 2.5 )'; x.preorder()
+        '2.5'
+        >>> x.expr = '( ( 2 ) )'; x.preorder()
+        '2.0'
+        >>> x.expr = '2 * ( ( 5 + -3 ) ^ 2 + ( 1 + 4 ) )'; x.preorder()
+        '* 2.0 + ^ + 5.0 -3.0 2.0 + 1.0 4.0'
+        >>> x.expr = '( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) )'; x.preorder()
+        '* 2.0 + ^ + 5.0 3.0 2.0 + 1.0 4.0'
+        >>> x.expr = '( ( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) ) )'; x.preorder()
+        '* 2.0 + ^ + 5.0 3.0 2.0 + 1.0 4.0'
+        >>> x.expr = '2 * ( -5 + 3 ) ^ 2 + ( 1 + 4 )'; x.preorder()
+        '+ * 2.0 ^ + -5.0 3.0 2.0 + 1.0 4.0'
+        """
+        # Here I have a variable which calls self._preorder and traverses(self.__etree)
+        # and I use the strip method to remove and excess space
+        answer = self._preorder(self.__etree)
+        return answer.strip()
+        
+        
+     
+
+    def _preorder(self, node): # For preorder I make a private method and use recursion to solve it 
+        if node is None:
+            return ""
+        return node.value + " " + self._preorder(node.left) + self._preorder(node.right) # since this is preorder I have node.value first
+    # and then I have node.left and node.right
+        
+        
+
+    
+    
+    def postorder(self):
+        """
+        >>> x = ExpressionTree()
+        >>> x.expr = '2 ^ 4'; x.postorder()
+        '2.0 4.0 ^'
+        >>> x.expr = '2 + 4 + 5'; x.postorder()
+        '2.0 4.0 + 5.0 +'
+        >>> x.expr = '2 ^ 4 ^ 5'; x.postorder()
+        '2.0 4.0 5.0 ^ ^'
+        >>> x.expr = '2'; x.postorder()
+        '2.0'
+        >>> x.expr = '2.1 * 5 + 3 ^ 2 + 1 + 4.45'; x.postorder()
+        '2.1 5.0 * 3.0 2.0 ^ + 1.0 + 4.45 +'
+        >>> x.expr = '( 2.5 )'; x.postorder()
+        '2.5'
+        >>> x.expr = '( ( 2 ) )'; x.postorder()
+        '2.0'
+        >>> x.expr = '2 * ( ( 5 + -3 ) ^ 2 + ( 1 + 4 ) )'; x.postorder()
+        '2.0 5.0 -3.0 + 2.0 ^ 1.0 4.0 + + *'
+        >>> x.expr = '( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) )'; x.postorder()
+        '2.0 5.0 3.0 + 2.0 ^ 1.0 4.0 + + *'
+        >>> x.expr = '( ( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) ) )'; x.postorder()
+        '2.0 5.0 3.0 + 2.0 ^ 1.0 4.0 + + *'
+        >>> x.expr = '2 * ( -5 + 3 ) ^ 2 + ( 1 + 4 )'; x.postorder()
+        '2.0 -5.0 3.0 + 2.0 ^ * 1.0 4.0 + +'
+        """
+        
+        ## YOUR CODE STARTS HERE
+        # I make a variable which calls the private method and traverses self.__etree
+        # I use the strip method to remove any extra spaces when I return answer
+        answer = self._postorderHelp(self.__etree)
+        return answer.strip()
+
+    def _postorderHelp(self, node): # create a private method for postorder and use recursion to solve it 
+        if node is None:
+            return ""
+        return self._postorderHelp(node.left) + self._postorderHelp(node.right) + " " + (node.value)
+
+    @property
+    def value(self):
+        """
+        >>> x = ExpressionTree()
+        >>> x.expr = '-5'; x.value
+        -5.0
+        >>> x.expr = '2 ^ 4'; x.value
+        16.0
+        >>> x.expr = '2 + 4 + 5'; x.value
+        11.0
+        >>> x.expr = '4 ^ 3 ^ 2'; x.value
+        262144.0
+        >>> x.expr = '2.1 * 5 + 3 ^ 2 + 1 + 4.45'; x.value
+        24.95
+        >>> x.expr = '( 2.5 )'; x.value
+        2.5
+        >>> x.expr = '( ( 2 ) )'; x.value
+        2.0
+        >>> x.expr = '2 * ( ( 5 + -3 ) ^ 2 + ( 1 + 4 ) )'; x.value
+        18.0
+        >>> x.expr = '( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) )'; x.value
+        138.0
+        >>> x.expr = '( ( 2 * ( ( 5 + 3 ) ^ 2 + ( 1 + 4 ) ) ) )'; x.value
+        138.0
+        """
+        
+        ## YOUR CODE STARTS HERE
+        # return the function evaluateTree and pass in self.__etree
+        return self.evaluateTree(self.__etree)
+
+    def evaluateTree(self, node):
+        if self._isNumber(node.value): # Here I say if the value of the node is a number then return the float version of it
+            return float(node.value)
+        else:
+            left = self.evaluateTree(node.left) #Here we use recursion to evaluate the left and right node and then I apply the operator to the left and right node In the if and elif statements
+            right = self.evaluateTree(node.right) 
+            operator = node.value
+            if operator == '+':
+                return left + right
+            elif operator == '-':
+                return left - right
+            elif operator == '*':
+                return left * right
+            elif operator == '/':
+                return left / right
+            elif operator == '^':
+                return left ** right
+                
+        
+        
+
+               
+
+
+
+            
+
+    # Do NOT modify these two methods
+    # They are used for testing
+    def __str__(self):
+        out_list = self._getPrintableString([], self.__etree)
+        return '\n'.join(out_list)
+
+    def _getPrintableString(self, out_list, node, level=0):
+        if node is None:
+            return out_list
+        else:
+            self._getPrintableString(out_list, node.right, level+1)
+            #print(' ' * 4 * level + '-> ' + str(node.value))
+            out_list.append(' ' * 4 * level + ' -> ' + str(node.value))
+            self._getPrintableString(out_list, node.left, level+1)
+            return out_list
+
+
+
+        
+    
+if __name__ == '__main__':
+    import doctest
+    
+    ## Uncomment this line if you want to run doctest by function.
+    ## Replace get_words with the name of the function you want to run
+    #doctest.run_docstring_examples(ExpressionTree.postorder, globals(), verbose=True, name='hw5')
+
+    ## Uncomment this line if you want to run the docstring
+    ## in all functions
+    doctest.testmod()
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+    
+
+
